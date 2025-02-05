@@ -1,6 +1,7 @@
 package LeetCode;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -42,5 +43,42 @@ class TwoSum_recursion {
         }
 
         return null;
+    }
+}
+
+class TwoSum_sortAndTwoPointer {
+
+    public int[] twoSum(int[] nums, int target) {
+
+        Number[] numbers = new Number[nums.length];
+        for (int i = 0; i < nums.length; i++) {
+            numbers[i] = new Number(nums[i], i);
+        }
+
+        Arrays.sort(numbers, (n1, n2) -> n1.number - n2.number);
+
+        int front = 0;
+        int rear = nums.length - 1;
+        while (front < rear) {
+            int sum = numbers[front].number + numbers[rear].number;
+            if (sum < target)
+                front++;
+            else if (sum > target)
+                rear--;
+            else
+                return new int[]{numbers[front].index, numbers[rear].index};
+
+        }
+        return new int[]{-1, -1};
+    }
+
+    class Number {
+        int number;
+        int index;
+
+        Number(int number, int index) {
+            this.number = number;
+            this.index = index;
+        }
     }
 }
