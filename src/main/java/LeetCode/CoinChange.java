@@ -3,7 +3,7 @@ package LeetCode;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class coinChange {
+public class CoinChange {
     public int coinChange(int[] coins, int amount) {
         Queue<Entry> queue = new LinkedList<>();
         boolean[] visited = new boolean[amount + 1];
