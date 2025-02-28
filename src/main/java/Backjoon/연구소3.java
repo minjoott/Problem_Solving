@@ -13,96 +13,98 @@ public class 연구소3 {
         int N = Integer.valueOf(st.nextToken());
         int M = Integer.valueOf(st.nextToken());
 
+        int minTime = Integer.MAX_VALUE;  // answer
+
         int[][] map = new int[N][N];
-        List<Position> emptyList = new ArrayList<>();
+        List<Position> virusList = new ArrayList<>();
         for (int i = 0; i < N; i++) {
             st = new StringTokenizer(br.readLine());
             for (int j = 0; j < N; j++) {
                 map[i][j] = Integer.valueOf(st.nextToken());
 
-                if (map[i][j] == 0) emptyList.add(new Position(j, i));
+                if (map[i][j] == 2) {  // 바이러스
+                    virusList.add(new Position(j, i));
+                }
             }
         }
 
-        // 만약 활성 바이러스의 개수가 빈 칸의 개수보다 크면, 즉시 0 출력
-        if (M > emptyList.size()) {
-            System.out.println(0);
-            return;
-        }
+        List<List<Position>> activeCombination = new ArrayList<>();
+        backtracking(0, new ArrayList<>(), activeCombination, virusList, M);
 
-        int minActiveCount = Integer.MAX_VALUE;  // answer
+        int[] dy = {1, 0, -1, 0};
+        int[] dx = {0, 1, 0, -1};
 
-        List<List<Position>> emptyCombinations = new ArrayList<>();
-        backtracking(0, new ArrayList<>(), emptyCombinations, emptyList, M);  // 활성 바이러스 M개를 놓을 빈 칸 조합 구하기
-
-        for (List<Position> emptyListToActive : emptyCombinations) {
-            // map 복사 && 현재 빈칸 조합에 활성 바이러스 M개 두고, enqueue(활성 바이러스)
-            int[][] currMap = new int[N][N];
+        for (List<Position> activeVirusList : activeCombination) {
             Queue<Entry> queue = new LinkedList<>();
-            boolean[][] visited = new boolean[N][N];
+            int[][] activeMap = new int[N][N];
             for (int i = 0; i < N; i++) {
                 for (int j = 0; j < N; j++) {
-                    currMap[i][j] = map[i][j];
-
-                    // 해당 빈 칸에 활성 바이러스 두기 && enqueue(활성 바이러스)
-                    for (Position virus : emptyListToActive) {
-                        if (j == virus.x && i == virus.y) {
-                            currMap[i][j] = -1;
-                            queue.add(new Entry(virus, 0));
-                            visited[i][j] = true;
-                        }
-                    }
+                    activeMap[i][j] = map[i][j];
                 }
             }
 
-            int[] dy = {1, 0, -1, 0};
-            int[] dx = {0, 1, 0, -1};
-            Entry currActiveVirus = null;
-            // 활성 바이러스 전파시키기
+            // 활성 바이러스 배치
+            for (Position activeVirus : activeVirusList) {
+                activeMap[activeVirus.y][activeVirus.x] = 3;
+                queue.add(new Entry(new Position(activeVirus.x, activeVirus.y), 0));
+            }
+
+            Entry currVirus = null;
             while (!queue.isEmpty()) {
-                currActiveVirus = queue.remove();
+                currVirus = queue.remove();
 
                 for (int d = 0; d < 4; d++) {
-                    int nextX = currActiveVirus.position.x + dx[d];
-                    int nextY = currActiveVirus.position.y + dy[d];
+                    int nextX = currVirus.position.x + dx[d];
+                    int nextY = currVirus.position.y + dy[d];
 
-                    if (nextX < 0 || nextX >= N || nextY < 0 || nextY >= N || visited[nextY][nextX]) continue;
+                    if (nextX < 0 || nextX >= N || nextY < 0 || nextY >= N) continue;
 
-                    if (currMap[nextY][nextX] == 0 || currMap[nextY][nextX] == 2) {
-                        queue.add(new Entry(new Position(nextX, nextY), currActiveVirus.count + 1));
-                        visited[nextY][nextX] = true;
-                        currMap[nextY][nextX] = -1;
+                    if (activeMap[nextY][nextX] == 0) {
+                        activeMap[nextY][nextX] = 3;
+                        queue.add(new Entry(new Position(nextX, nextY), currVirus.time + 1));
+                    } else if (activeMap[nextY][nextX] == 2) {
+                        activeMap[nextY][nextX] = 3;
+                        queue.add(new Entry(new Position(nextX, nextY), currVirus.time));
+                    }
+
+                }
+            }
+
+            boolean failActive = false;
+            outerLoop:
+            for (int i = 0; i < N; i++) {
+                for (int j = 0; j < N; j++) {
+                    if (activeMap[i][j] == 0) {
+                        failActive = true;
+                        break outerLoop;
                     }
                 }
             }
 
-            boolean failAllActive = false;
-            for (int i = 0; i < N; i++) {
-                for (int j = 0; j < N; j++) {
-                    if (currMap[i][j] == 0) failAllActive = true;
-                }
-            }
-            if (!failAllActive) {  // 모든 빈 칸에 활성 바이러스 전파 성공했으면
-                minActiveCount = Math.min(currActiveVirus.count, minActiveCount);
+            if (!failActive) {
+                minTime = Math.min(currVirus.time, minTime);
             }
         }
 
-        if (minActiveCount == Integer.MAX_VALUE)  // 모든 빈 칸에 활성 바이러스 전파를 성공한 케이스가 없으면,
+        if (minTime == Integer.MAX_VALUE) {
             System.out.println(-1);
-        else
-            System.out.println(minActiveCount);
+        }
+        else {
+            System.out.println(minTime);
+        }
+        return;
     }
 
-    static void backtracking(int startIndex, List<Position> currEmptyList, List<List<Position>> emptyCombinations, List<Position> emptyList, int M) {
-        if (currEmptyList.size() == M) {
-            emptyCombinations.add(new ArrayList<>(currEmptyList));
+    static void backtracking(int start, List<Position> currActive, List<List<Position>> activeCombination, List<Position> virusList, int M) {
+        if (currActive.size() == M) {
+            activeCombination.add(new ArrayList<>(currActive));
             return;
         }
 
-        for (int i = startIndex; i < emptyList.size(); i++) {
-            currEmptyList.add(emptyList.get(i));
-            backtracking(i + 1, currEmptyList, emptyCombinations, emptyList, M);
-            currEmptyList.remove(currEmptyList.size() - 1);
+        for (int i = start; i < virusList.size(); i++) {
+            currActive.add(virusList.get(i));
+            backtracking(i + 1, currActive, activeCombination, virusList, M);
+            currActive.remove(currActive.size() - 1);
         }
     }
 
@@ -118,11 +120,11 @@ public class 연구소3 {
 
     static class Entry {
         Position position;
-        int count;
+        int time;
 
-        Entry(Position position, int count) {
+        Entry(Position position, int time) {
             this.position = position;
-            this.count = count;
+            this.time = time;
         }
     }
 }
