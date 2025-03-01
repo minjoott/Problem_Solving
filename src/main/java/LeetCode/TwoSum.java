@@ -1,8 +1,6 @@
 package LeetCode;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 
 class TwoSum_for {
@@ -80,5 +78,24 @@ class TwoSum_sortAndTwoPointer {
             this.number = number;
             this.index = index;
         }
+    }
+}
+
+class TwoSum_hashMap {
+    public int[] twoSum(int[] nums, int target) {
+        int[] result = new int[2];
+        Map<Integer, Integer> hashtable = new HashMap<>();
+
+        for (int i = 0; i < nums.length; i++) {
+            if (hashtable.containsKey(nums[i])) {
+                result[0] = i;
+                result[1] = hashtable.get(nums[i]);
+            }
+            else {
+                hashtable.put(target - nums[i], i);
+            }
+        }
+
+        return result;
     }
 }
